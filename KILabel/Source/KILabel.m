@@ -567,6 +567,10 @@ NSString * const KILabelLinkKey = @"link";
         CGFloat offsetY = (bounds.size.height - textBounds.size.height) / 2.0;
         textBounds.origin.y += offsetY;
     }
+    
+    if (_layoutManager.textStorage.length == 0) {
+        textBounds.size.height = 0.0f;
+    }
 
     // Restore the old container state before we exit under any circumstances
     _textContainer.size = savedTextContainerSize;
