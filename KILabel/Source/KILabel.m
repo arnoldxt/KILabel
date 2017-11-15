@@ -309,12 +309,25 @@ NSString * const KILabelLinkKey = @"link";
     if (_textStorage)
     {
         // Set the string on the storage
-        [_textStorage setAttributedString:attributedString];
+        // setAttributedString: requires a non-null argument
+        if (attributedString) {
+            [_textStorage setAttributedString:attributedString];
+        }
+        else {
+            [_textStorage setAttributedString: [NSAttributedString new]];
+        }
+
     }
     else
     {
         // Create a new text storage and attach it correctly to the layout manager
-        _textStorage = [[NSTextStorage alloc] initWithAttributedString:attributedString];
+        // setAttributedString: requires a non-null argument
+        if (attributedString) {
+            _textStorage = [[NSTextStorage alloc] initWithAttributedString: attributedString];
+        }
+        else {
+            _textStorage = [[NSTextStorage alloc] initWithAttributedString: [NSAttributedString new]];
+        }
         [_textStorage addLayoutManager:_layoutManager];
         [_layoutManager setTextStorage:_textStorage];
     }
@@ -607,6 +620,11 @@ NSString * const KILabelLinkKey = @"link";
     [super setBounds:bounds];
     
     _textContainer.size = self.bounds.size;
+    
+    if (self.numberOfLines == 0 && bounds.size.width != self.preferredMaxLayoutWidth) {
+        self.preferredMaxLayoutWidth = self.bounds.size.width;
+        [self setNeedsUpdateConstraints];
+    }
 }
 
 - (void)layoutSubviews
