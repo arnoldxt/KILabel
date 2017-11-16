@@ -58,6 +58,7 @@ NSString * const KILabelLinkKey = @"link";
 @implementation KILabel
 {
     NSMutableDictionary *_linkTypeAttributes;
+    CGPoint touchBeganLocation;
 }
 
 #pragma mark - Construction
@@ -658,8 +659,8 @@ NSString * const KILabelLinkKey = @"link";
     
     // Get the info for the touched link if there is one
     NSDictionary *touchedLink;
-    CGPoint touchLocation = [[touches anyObject] locationInView:self];
-    touchedLink = [self linkAtPoint:touchLocation];
+    touchBeganLocation = [[touches anyObject] locationInView:self];
+    touchedLink = [self linkAtPoint:touchBeganLocation];
     
     if (touchedLink)
     {
@@ -675,7 +676,11 @@ NSString * const KILabelLinkKey = @"link";
 {
     [super touchesMoved:touches withEvent:event];
     
-    _isTouchMoved = YES;
+    CGPoint touchLocation = [[touches anyObject] locationInView:self];
+    if (fabs(touchLocation.x - touchBeganLocation.x) > 1.0f &&
+        fabs(touchLocation.y - touchBeganLocation.y) > 1.0f) {
+        _isTouchMoved = YES;
+    }
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
