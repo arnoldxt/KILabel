@@ -29,12 +29,80 @@ NSString * const KILabelLinkTypeKey = @"linkType";
 NSString * const KILabelRangeKey = @"range";
 NSString * const KILabelLinkKey = @"link";
 
+@interface KILayoutManager : NSLayoutManager
+@end
+@implementation KILayoutManager
+- (void)fillBackgroundRectArray:(const CGRect *)rectArray count:(NSUInteger)rectCount forCharacterRange:(NSRange)charRange color:(UIColor *)color
+{
+    CGFloat halfLineWidth = 4.; // change this to change corners radius
+    CGFloat marginX = 1.5f; // change this to adjust x margin
+    
+    CGMutablePathRef path = CGPathCreateMutable();
+    
+    CGRect rect0 = rectArray[0];
+    rect0.origin.x -= marginX;
+    rect0.size.width += marginX * 2;
+    
+    if (rectCount == 1 ||
+        (rectCount == 2 && (CGRectGetMaxX(rectArray[1]) < CGRectGetMinX(rectArray[0])))
+        )
+    {
+        // 1 rect or 2 rects without edges in contact
+        CGPathAddRect(path, NULL, CGRectInset(rect0, halfLineWidth, halfLineWidth));
+        if (rectCount == 2) {
+            CGRect rect1 = rectArray[1];
+            rect1.origin.x -= marginX;
+            rect1.size.width += marginX * 2;
+            CGPathAddRect(path, NULL, CGRectInset(rect1, halfLineWidth, halfLineWidth));
+        }
+    }
+    else
+    {
+        // 2 or 3 rects
+        NSUInteger lastRect = rectCount - 1;
+        CGRect rectLast = rectArray[lastRect];
+        rectLast.origin.x -= marginX / 2;
+        rectLast.size.width += marginX;
+        
+        CGPathMoveToPoint(path, NULL, CGRectGetMinX(rect0) + halfLineWidth, CGRectGetMaxY(rect0) + halfLineWidth);
+        
+        CGPathAddLineToPoint(path, NULL, CGRectGetMinX(rect0) + halfLineWidth, CGRectGetMinY(rect0) + halfLineWidth);
+        CGPathAddLineToPoint(path, NULL, CGRectGetMaxX(rect0) - halfLineWidth, CGRectGetMinY(rect0) + halfLineWidth);
+        
+        CGPathAddLineToPoint(path, NULL, CGRectGetMaxX(rect0) - halfLineWidth, CGRectGetMinY(rectLast) - halfLineWidth);
+        CGPathAddLineToPoint(path, NULL, CGRectGetMaxX(rectLast) - halfLineWidth, CGRectGetMinY(rectLast) - halfLineWidth);
+        
+        CGPathAddLineToPoint(path, NULL, CGRectGetMaxX(rectLast) - halfLineWidth, CGRectGetMaxY(rectLast) - halfLineWidth);
+        CGPathAddLineToPoint(path, NULL, CGRectGetMinX(rectLast) + halfLineWidth, CGRectGetMaxY(rectLast) - halfLineWidth);
+        
+        CGPathAddLineToPoint(path, NULL, CGRectGetMinX(rectLast) + halfLineWidth, CGRectGetMaxY(rect0) + halfLineWidth);
+        
+        CGPathCloseSubpath(path);
+    }
+    
+    [color set]; // set fill and stroke color
+    
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
+    CGContextSetLineWidth(ctx, halfLineWidth * 2.);
+    CGContextSetLineJoin(ctx, kCGLineJoinRound);
+    
+    CGContextSetAllowsAntialiasing(ctx, YES);
+    CGContextSetShouldAntialias(ctx, YES);
+    
+    CGContextAddPath(ctx, path);
+    CGPathRelease(path);
+    
+    CGContextDrawPath(ctx, kCGPathFillStroke);
+}
+
+@end
+
 #pragma mark - Private Interface
 
 @interface KILabel()
 
 // Used to control layout of glyphs and rendering
-@property (nonatomic, retain) NSLayoutManager *layoutManager;
+@property (nonatomic, retain) KILayoutManager *layoutManager;
 
 // Specifies the space in which to render text
 @property (nonatomic, retain) NSTextContainer *textContainer;
@@ -96,7 +164,7 @@ NSString * const KILabelLinkKey = @"link";
     _textContainer.size = self.frame.size;
     
     // Create a layout manager for rendering
-    _layoutManager = [[NSLayoutManager alloc] init];
+    _layoutManager = [[KILayoutManager alloc] init];
     _layoutManager.delegate = self;
     [_layoutManager addTextContainer:_textContainer];
     
@@ -555,6 +623,7 @@ NSString * const KILabelLinkKey = @"link";
     _textContainer.maximumNumberOfLines = numberOfLines;
     
     // Measure the text with the new state
+    [_layoutManager glyphRangeForTextContainer:_textContainer]; // Force layout text as suggested by Apple document
     CGRect textBounds = [_layoutManager usedRectForTextContainer:_textContainer];
     
     // Position the bounds and round up the size for good measure
@@ -600,6 +669,7 @@ NSString * const KILabelLinkKey = @"link";
 {
     CGPoint textOffset = CGPointZero;
     
+    [_layoutManager glyphRangeForTextContainer:_textContainer]; // Force layout text as suggested by Apple document
     CGRect textBounds = [_layoutManager usedRectForTextContainer:_textContainer];
     textBounds.size.width = ceil(textBounds.size.width);
     textBounds.size.height = ceil(textBounds.size.height);
