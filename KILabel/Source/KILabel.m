@@ -656,7 +656,7 @@ NSString * const KILabelLinkKey = @"link";
     // [super drawTextInRect:rect];
     
     // Calculate the offset of the text in the view
-    NSRange glyphRange = [_layoutManager glyphRangeForTextContainer:_textContainer];
+    NSRange glyphRange = [_layoutManager glyphRangeForTextContainer:_textContainer];  // Force layout text as suggested by Apple document
     CGPoint glyphsPosition = [self calcGlyphsPositionInView];
     
     // Drawing code
@@ -669,7 +669,6 @@ NSString * const KILabelLinkKey = @"link";
 {
     CGPoint textOffset = CGPointZero;
     
-    [_layoutManager glyphRangeForTextContainer:_textContainer]; // Force layout text as suggested by Apple document
     CGRect textBounds = [_layoutManager usedRectForTextContainer:_textContainer];
     textBounds.size.width = ceil(textBounds.size.width);
     textBounds.size.height = ceil(textBounds.size.height);
