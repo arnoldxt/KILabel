@@ -289,7 +289,9 @@ NSString * const KILabelLinkKey = @"link";
     {
         text = @"";
     }
-    
+    if (@available(iOS 12.0, *)) {
+        [self invalidateIntrinsicContentSize];
+    }
     NSAttributedString *attributedText = [[NSAttributedString alloc] initWithString:text attributes:[self attributesFromProperties]];
     [self updateTextStoreWithAttributedString:attributedText];
 }
@@ -298,7 +300,9 @@ NSString * const KILabelLinkKey = @"link";
 {
     // Pass the text to the super class first
     [super setAttributedText:attributedText];
-    
+    if (@available(iOS 12.0, *)) {
+        [self invalidateIntrinsicContentSize];
+    }
     [self updateTextStoreWithAttributedString:attributedText];
 }
 
